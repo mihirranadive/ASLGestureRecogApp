@@ -2,7 +2,7 @@ package com.example.aslgesturerecogapp;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
@@ -17,7 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 
-public class MainActivity extends Activity implements CvCameraViewListener {
+public class MainActivity extends Activity implements CvCameraViewListener2 {
 
 	private static final String TAG = "ASLGestureRecog::Activity";
 
@@ -57,6 +57,7 @@ public class MainActivity extends Activity implements CvCameraViewListener {
 
 		mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.aslgesturerecogapp_surface_view);
 		mOpenCvCameraView.setCvCameraViewListener(this);
+		
 	}
 
 	@Override
@@ -101,18 +102,22 @@ public class MainActivity extends Activity implements CvCameraViewListener {
 	public void onCameraViewStopped() {
 		viewMat1.release();
 	}
-
-	public Mat onCameraFrame(Mat inputFrame) {
-		/*final int viewMode = mViewMode;
-
-		// input frame has RGBA format
-		viewMat1 = inputFrame.rgba();
-		Mat viewMatgray = inputFrame.gray();*/
+	
+	@Override
+	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+//		Mat mIntermediateMat = new Mat(); 
+//		Mat mRgba = inputFrame.rgba();
+//		Imgproc.Canny(inputFrame.gray(), mIntermediateMat, 80, 100);
+//        Imgproc.cvtColor(mIntermediateMat, mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
 		
-
-		return inputFrame;
+		Mat mRgba = inputFrame.rgba();
+        Mat mGray = inputFrame.gray();
+		Log.d(TAG, "Invoking Native Code");
+        invokeNativeCode(mGray.getNativeObjAddr(), mRgba.getNativeObjAddr());
+		Log.d(TAG, "Done native code finished executing");
+		
+        return mRgba;
 	}
-
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -125,4 +130,12 @@ public class MainActivity extends Activity implements CvCameraViewListener {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+
+	public native void invokeNativeCode(long matAddrGr, long matAddrRgba);
+	
+	static {
+		System.loadLibrary("ASLGestureRecogApp");
+//		System.loadLibrary("opencv_java3");
+        }
+	
 }
